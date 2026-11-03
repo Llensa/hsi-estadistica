@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, signal } from '@angular/core';
 import { Estado } from '../core/estado';
-import { parseArchivo } from '../core/parse-reporte';
+import { leerArchivo } from '../core/lector';
 import type { ReporteProfesional } from '../core/types';
 
 const EXTENSIONES = /\.(xls|xlsx)$/i;
@@ -76,8 +76,10 @@ export class Dropzone {
   protected readonly advertencias = computed(() => this.estado.avisosCarga().advertencias);
   protected readonly mensajes = computed(() => this.estado.avisosCarga().mensajes);
 
+  protected readonly avance = signal('');
+
   protected readonly titulo = computed(() => {
-    if (this.cargando()) return 'Leyendo archivos…';
+    if (this.cargando()) return this.avance() || 'Leyendo archivos…';
     return this.compact() ? 'Agregar archivos' : 'Arrastrá los archivos de HSI acá';
   });
 
@@ -135,7 +137,12 @@ export class Dropzone {
     const msgs: string[] = [];
     const advs: string[] = [];
     try {
-      const resultados = await Promise.allSettled(validos.map((f) => parseArchivo(f)));
+      const resultados: PromiseSettledResult<ReporteProfesional[]>[] = [];
+      for (const [i, f] of validos.entries()) {
+        this.avance.set(`Leyendo archivo ${i + 1} de ${validos.length}…`);
+        const [resultado] = await Promise.allSettled([leerArchivo(f)]);
+        resultados.push(resultado);
+      }
       const ok: ReporteProfesional[] = [];
       resultados.forEach((r, i) => {
         const nombre = validos[i].name;

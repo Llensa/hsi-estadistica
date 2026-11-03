@@ -1,8 +1,11 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
+import { AccionesMes } from './components/acciones-mes';
+import { AvisoResponsabilidad } from './components/aviso-responsabilidad';
 import { AvisosReporte } from './components/avisos-reporte';
 import { BotonImprimir } from './components/boton-imprimir';
 import { DialogoConfirmar } from './components/dialogo-confirmar';
 import { Dropzone } from './components/dropzone';
+import { ImpresionMes } from './components/impresion-mes';
 import { ListaProfesionales } from './components/lista-profesionales';
 import { ModuloAnexo } from './components/modulo-anexo';
 import { Planilla } from './components/planilla';
@@ -15,10 +18,13 @@ import { QuitarReportes } from './core/quitar';
 @Component({
   selector: 'app-root',
   imports: [
+    AccionesMes,
+    AvisoResponsabilidad,
     AvisosReporte,
     BotonImprimir,
     DialogoConfirmar,
     Dropzone,
+    ImpresionMes,
     ListaProfesionales,
     ModuloAnexo,
     Planilla,
@@ -81,6 +87,11 @@ export class App {
   });
 
   constructor() {
+    // Con datos cargados, cerrar pide confirmación (se pierden: no se guardan en disco)
+    window.addEventListener('beforeunload', (ev) => {
+      if (this.estado.reportesProfesionales().length > 0) ev.preventDefault();
+    });
+
     // Al cambiar de vista, volver al principio de la página
     effect(() => {
       this.estado.vista();

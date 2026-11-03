@@ -30,7 +30,9 @@ programa, en la máxima medida que permita la ley.
 ## Usar la app (Windows)
 
 1. Conseguí el archivo **`Estadisticas-medicas.exe`**. No hace falta instalar nada.
-2. Abrilo con doble clic. Puede tardar unos segundos en arrancar.
+2. Abrilo con doble clic. Puede tardar hasta 20 segundos en arrancar. Solo se abre una ventana
+   por vez: si ya está abierta, se trae al frente. Cada vez que se abre hay que aceptar el aviso
+   de responsabilidad.
 3. La primera vez, Windows puede mostrar "Windows protegió su PC" porque el programa no tiene
    firma digital. Si lo recibiste de una fuente de confianza, tocá **Más información** y
    **Ejecutar de todas formas**.
@@ -78,9 +80,15 @@ o abrí "Símbolo del sistema" (cmd) en lugar de PowerShell.
 
 - **Ver General**: planilla consolidada de todos los profesionales y lista de archivos cargados.
 - **Profesional**: planilla de cada uno y los avisos de calidad de datos de su archivo.
+- **Buscar**: la barra lateral filtra por profesional o especialidad. Enter abre el primero.
 - **Imprimir**: hoja A4 horizontal, sin menú ni botones, con bordes negros.
+- **Imprimir todo el mes**: el consolidado y una hoja por profesional, de una sola vez.
+- **Exportar a Excel**: un solo archivo con resumen, consolidado, una hoja por profesional y
+  obras sociales. Se puede agregar una hoja con todas las atenciones: incluye nombres, DNI y
+  diagnósticos, así que ese archivo queda bajo tu responsabilidad.
 - **Anexo II (Recupero)**: un comprobante por cada atención con obra social o prepaga,
-  uno por hoja (A4 vertical). Se puede filtrar por profesional.
+  uno por hoja (A4 vertical). Se puede filtrar por profesional, obra social y mes. Muestra los
+  Anexos incompletos y los totales por obra social.
 
 En el diálogo de impresión desactivá "Encabezados y pies de página".
 
@@ -124,6 +132,9 @@ En el diálogo de impresión desactivá "Encabezados y pies de página".
   - `anexo.ts`: pacientes con obra social
   - `avisos.ts`: avisos de calidad de datos
   - `busqueda.ts`: filtro de profesionales
+  - `resumen.ts`: control de Anexos y totales por obra social
+  - `exportar.ts`: Excel con todo lo cargado
+  - `lector.ts`, `lector.worker.ts`: lectura de Excel en segundo plano
   - `estado.ts`: estado global (signals)
   - `confirmacion.ts`, `quitar.ts`: confirmación antes de quitar
 - `src/app/components/`: sidebar, dropzone, planilla, avisos, lista, módulo y hoja del Anexo II

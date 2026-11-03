@@ -32,7 +32,7 @@ export function tieneCobertura(v: unknown): boolean {
   return n !== '' && !SIN_COBERTURA.has(n);
 }
 
-function formatearFechaCelda(v: unknown): string {
+export function formatearFechaCelda(v: unknown): string {
   const f = parseFecha(v);
   return f ? formatearFecha(f) : texto(v);
 }

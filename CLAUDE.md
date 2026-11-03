@@ -9,6 +9,7 @@ y los Anexos II de recupero financiero. Es una app de escritorio (Electron) sin 
 - `npm install`: instalar dependencias
 - `npm start`: servidor de desarrollo en http://localhost:4200
 - `npm run build`: compilación de producción (usala para verificar que no hay errores)
+- `npm test`: tests de `src/app/core` (necesita Chrome, o `CHROME_BIN` apuntando a Edge)
 - `npm run app`: compila y abre la app de escritorio
 - `npm run dist`: genera `release/Estadisticas-medicas.exe` (portable)
 - Archivos de prueba con datos inventados: `ejemplos/`
@@ -30,6 +31,9 @@ y los Anexos II de recupero financiero. Es una app de escritorio (Electron) sin 
   - `anexo.ts`: pacientes con obra social para el Anexo II
   - `avisos.ts`: avisos de calidad de datos
   - `busqueda.ts`: filtro de profesionales de la barra lateral
+  - `resumen.ts`: control de Anexos y totales por obra social
+  - `exportar.ts`: Excel único con todo lo cargado (pacientes solo si el usuario lo elige)
+  - `lector.ts`, `lector.worker.ts`: lectura de Excel en un Web Worker
   - `estado.ts`: estado global con signals
   - `confirmacion.ts` y `quitar.ts`: confirmación antes de borrar
 - `src/app/components/`: un componente por archivo, plantilla inline, `OnPush`

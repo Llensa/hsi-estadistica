@@ -1,5 +1,8 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core';
 
+/** Clase de body que agrega al papel las planillas de todos los profesionales */
+export const IMPRIMIR_MES = 'imprimir-mes';
+
 @Component({
   selector: 'app-boton-imprimir',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -20,6 +23,7 @@ export class BotonImprimir {
   readonly disabled = input(false);
 
   protected imprimir(): void {
+    document.body.classList.remove(IMPRIMIR_MES);
     window.print();
   }
 }

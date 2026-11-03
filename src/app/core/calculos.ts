@@ -141,7 +141,7 @@ export const crearMatriz = (): MatrizMensual =>
 const claveFecha = (f: YMD) => f.y * 10_000 + f.m * 100 + f.d;
 
 /** Valida las fechas de una fila y calcula la edad, o devuelve el motivo del descarte */
-function leerFechas(celdas: Map<string, unknown>): { at: YMD; edad: number } | { motivo: string } {
+export function leerFechas(celdas: Map<string, unknown>): { at: YMD; edad: number } | { motivo: string } {
   const rawAt = valor(celdas, 'atencion');
   const rawNac = valor(celdas, 'nacimiento');
   if (esVacio(rawAt)) return { motivo: 'Falta la fecha de atención' };

@@ -1,7 +1,7 @@
 // Proceso principal de la app de escritorio.
 // Reglas de confidencialidad: la app no se conecta a internet y su sesión vive
 // solo en memoria, así que la app no guarda en disco nada de lo cargado.
-const { app, BrowserWindow, Menu, net, protocol, session } = require('electron');
+const { app, BrowserWindow, Menu, dialog, net, protocol, session } = require('electron');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
@@ -17,6 +17,7 @@ const CSP = [
   "img-src 'self' data:",
   "font-src 'self'",
   "connect-src 'self'",
+  "worker-src 'self'",
   "base-uri 'self'",
   "form-action 'none'",
   "object-src 'none'",
@@ -53,15 +54,27 @@ async function bloquearInternet(sesion) {
   });
   sesion.setPermissionRequestHandler((_contenido, _permiso, responder) => responder(false));
   sesion.setPermissionCheckHandler(() => false);
-  sesion.on('will-download', (evento) => evento.preventDefault());
+  // Solo se guarda lo que genera la app (el Excel), y Windows pregunta dónde
+  sesion.on('will-download', (evento, item) => {
+    if (!item.getURL().startsWith('blob:') || !item.getFilename().endsWith('.xlsx')) {
+      evento.preventDefault();
+      return;
+    }
+    item.setSaveDialogOptions({
+      title: 'Guardar Excel',
+      filters: [{ name: 'Excel', extensions: ['xlsx'] }],
+    });
+  });
 }
+
+let ventana = null;
 
 async function crearVentana() {
   const sesion = session.fromPartition(PARTICION);
   servirApp(sesion);
   await bloquearInternet(sesion);
 
-  const ventana = new BrowserWindow({
+  ventana = new BrowserWindow({
     width: 1280,
     height: 800,
     title: 'Estadísticas médicas',
@@ -81,6 +94,19 @@ async function crearVentana() {
     if (new URL(destino).origin !== ORIGEN) evento.preventDefault();
   });
   ventana.webContents.setWebRTCIPHandlingPolicy('disable_non_proxied_udp');
+  // La página avisa que hay datos cargados; acá se pregunta antes de cerrar
+  ventana.webContents.on('will-prevent-unload', (evento) => {
+    const eleccion = dialog.showMessageBoxSync(ventana, {
+      type: 'warning',
+      noLink: true,
+      buttons: ['Cerrar y perder los datos', 'Seguir trabajando'],
+      defaultId: 1,
+      cancelId: 1,
+      title: 'Estadísticas médicas',
+      message: 'Hay datos cargados. Si cerrás la app, se pierden.',
+    });
+    if (eleccion === 0) evento.preventDefault();
+  });
   ventana.webContents.on('render-process-gone', () => ventana.reload());
   ventana.loadURL(`${ORIGEN}/index.html`);
 }
@@ -90,5 +116,16 @@ const depuracion = ['remote-debugging-port', 'remote-debugging-pipe'];
 if (app.isPackaged && depuracion.some((s) => app.commandLine.hasSwitch(s))) app.exit(1);
 
 Menu.setApplicationMenu(null);
-app.whenReady().then(crearVentana);
 app.on('window-all-closed', () => app.quit());
+
+// Una sola ventana: si se abre otra vez, se trae al frente la que ya está abierta
+if (app.requestSingleInstanceLock()) {
+  app.on('second-instance', () => {
+    if (!ventana) return;
+    if (ventana.isMinimized()) ventana.restore();
+    ventana.focus();
+  });
+  app.whenReady().then(crearVentana);
+} else {
+  app.quit();
+}

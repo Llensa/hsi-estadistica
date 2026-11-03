@@ -11,7 +11,16 @@
   margin: 12mm;
 }
 
+.solo-mes {
+  display: none;
+}
+
 @media print {
+  body.imprimir-mes .solo-mes {
+    display: block;
+    break-before: page;
+  }
+
   html,
   body {
     background: #fff !important;
