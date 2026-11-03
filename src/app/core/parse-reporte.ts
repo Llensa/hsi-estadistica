@@ -4,7 +4,7 @@ import type { Fila, ReporteProfesional } from './types';
 
 /** El encabezado se busca en las primeras filas (por defecto HSI lo pone en la fila 4) */
 const FILAS_A_REVISAR = 30;
-const FILA_ENCABEZADO_POR_DEFECTO = 4;
+const MAX_FILAS = 100_000;
 export const SIN_PROFESIONAL = 'Sin profesional informado';
 
 /** Id único (crypto.randomUUID solo existe en https o localhost) */
@@ -76,14 +76,14 @@ export async function parseArchivo(file: File): Promise<ReporteProfesional[]> {
   let wb: import('xlsx').WorkBook;
   try {
     // raw: true evita que SheetJS reinterprete fechas de texto (dd/mm) como mm/dd
-    wb = XLSX.read(await file.arrayBuffer(), { type: 'array', raw: true });
+    // sheetRows frena archivos que declaran millones de filas para colgar la app
+    wb = XLSX.read(await file.arrayBuffer(), { type: 'array', raw: true, sheetRows: MAX_FILAS + 1 });
   } catch {
     throw new Error('No se pudo abrir. Verificá que sea un Excel exportado de HSI.');
   }
 
   // Busca la hoja y la fila que tienen la columna 'Fecha de atención'
   let encabezado: Encabezado | null = null;
-  let filaPorDefecto: string[] = [];
   for (const hoja of wb.SheetNames) {
     const ws = wb.Sheets[hoja];
     const ref = ws?.['!ref'];
@@ -103,16 +103,13 @@ export async function parseArchivo(file: File): Promise<ReporteProfesional[]> {
       encabezado = { hoja, fila: rango.s.r + idx, columnas: primeras[idx].map(texto) };
       break;
     }
-    if (!filaPorDefecto.length) {
-      filaPorDefecto = (primeras[FILA_ENCABEZADO_POR_DEFECTO - 1 - rango.s.r] ?? [])
-        .map(texto)
-        .filter(Boolean);
-    }
   }
 
   if (!encabezado) {
-    const vistas = filaPorDefecto.length ? ` En la fila 4 hay: ${filaPorDefecto.join(', ')}.` : '';
-    throw new Error(`No se encontró la columna 'Fecha de atención'.${vistas}`);
+    // No se muestra el contenido de las filas: podría ser un paciente
+    throw new Error(
+      "No se encontró la columna 'Fecha de atención'. ¿Exportaste el reporte correcto de HSI?"
+    );
   }
   if (!tieneColumna(encabezado.columnas, 'nacimiento')) {
     throw new Error(
@@ -127,6 +124,12 @@ export async function parseArchivo(file: File): Promise<ReporteProfesional[]> {
   }
 
   const avisosColumnas: string[] = [];
+  const rangoCompleto = ws['!fullref'] ?? ws['!ref'];
+  if (rangoCompleto && XLSX.utils.decode_range(rangoCompleto).e.r > MAX_FILAS) {
+    avisosColumnas.push(
+      `El archivo supera las ${MAX_FILAS} filas: solo se leyeron las primeras y faltan atenciones.`
+    );
+  }
   if (!tieneColumna(encabezado.columnas, 'genero')) {
     avisosColumnas.push(
       "Falta la columna 'Género autopercibido': todos los pacientes quedan en 'Sin Especificar'."

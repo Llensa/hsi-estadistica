@@ -27,6 +27,7 @@ export const COLUMNAS = {
     'numero de documento',
     'numero documento',
     'n documento',
+    'n de documento',
     'documento',
     'dni',
   ],
@@ -44,6 +45,7 @@ export const COLUMNAS = {
     'numero de afiliado',
     'numero afiliado',
     'n afiliado',
+    'n de afiliado',
     'afiliado',
   ],
 } as const;

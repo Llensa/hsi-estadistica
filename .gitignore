@@ -5,7 +5,11 @@
 *.xls
 *.xlsx
 *.xlsm
+*.xlsb
+*.ods
 *.csv
+*.tsv
+*.zip
 *.pdf
 !/ejemplos/ejemplo-*.xls
 !/ejemplos/ejemplo-*.xlsx

@@ -1,6 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { extraerPacientesConObraSocial } from './anexo';
 import { calcularConsolidado } from './calculos';
+import { SIN_PROFESIONAL } from './parse-reporte';
 import type { ReporteProfesional, Vista } from './types';
 
 export interface ResultadoAgregar {
@@ -10,14 +11,29 @@ export interface ResultadoAgregar {
   repetidos: ReporteProfesional[];
 }
 
-/** Clave de una planilla: mismo archivo y mismo profesional = misma planilla */
-const claveCarga = (r: ReporteProfesional) => `${r.nombreArchivo}|${r.claveProfesional}`;
+export interface AvisosCarga {
+  mensajes: string[];
+  advertencias: string[];
+  errores: string[];
+}
+
+const SIN_AVISOS: AvisosCarga = { mensajes: [], advertencias: [], errores: [] };
+
+/**
+ * Clave de una planilla: mismo archivo, profesional y contenido = misma planilla.
+ * Incluye períodos y atenciones porque HSI puede exportar cada mes con el mismo nombre.
+ */
+const claveCarga = (r: ReporteProfesional) =>
+  [r.nombreArchivo, r.claveProfesional, r.periodos.join(','), r.totalAtenciones].join('|');
 
 /** Estado global de la app (signals). Todo vive en el navegador: no se sube nada. */
 @Injectable({ providedIn: 'root' })
 export class Estado {
   readonly reportesProfesionales = signal<ReporteProfesional[]>([]);
   readonly vista = signal<Vista>({ tipo: 'general' });
+
+  /** Resultado de la última carga. Vive acá porque la dropzone cambia al cargar el primer archivo. */
+  readonly avisosCarga = signal<AvisosCarga>(SIN_AVISOS);
 
   /** Matriz de 31 días con la suma de todos los profesionales */
   readonly reporteConsolidado = computed(() => calcularConsolidado(this.reportesProfesionales()));
@@ -49,6 +65,8 @@ export class Estado {
   readonly duplicados = computed(() => {
     const porProfesional = new Map<string, ReporteProfesional[]>();
     for (const r of this.reportesProfesionales()) {
+      // Las filas sin profesional de dos archivos no son la misma persona
+      if (r.profesional === SIN_PROFESIONAL) continue;
       const lista = porProfesional.get(r.claveProfesional) ?? [];
       lista.push(r);
       porProfesional.set(r.claveProfesional, lista);
@@ -108,6 +126,7 @@ export class Estado {
 
   limpiar(): void {
     this.reportesProfesionales.set([]);
+    this.avisosCarga.set(SIN_AVISOS);
     this.vista.set({ tipo: 'general' });
   }
 
@@ -117,6 +136,7 @@ export class Estado {
 
   private quitarDonde(condicion: (r: ReporteProfesional) => boolean): void {
     this.reportesProfesionales.update((lista) => lista.filter((r) => !condicion(r)));
+    this.avisosCarga.set(SIN_AVISOS);
     const v = this.vista();
     if (v.tipo === 'profesional' && !this.reportesProfesionales().some((r) => r.id === v.id)) {
       this.vista.set({ tipo: 'general' });

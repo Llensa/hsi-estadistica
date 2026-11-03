@@ -4,6 +4,7 @@ import { parseArchivo } from '../core/parse-reporte';
 import type { ReporteProfesional } from '../core/types';
 
 const EXTENSIONES = /\.(xls|xlsx)$/i;
+const TAMANO_MAXIMO_MB = 50;
 
 @Component({
   selector: 'app-dropzone',
@@ -71,9 +72,9 @@ export class Dropzone {
 
   protected readonly arrastrando = signal(false);
   protected readonly cargando = signal(false);
-  protected readonly errores = signal<string[]>([]);
-  protected readonly advertencias = signal<string[]>([]);
-  protected readonly mensajes = signal<string[]>([]);
+  protected readonly errores = computed(() => this.estado.avisosCarga().errores);
+  protected readonly advertencias = computed(() => this.estado.avisosCarga().advertencias);
+  protected readonly mensajes = computed(() => this.estado.avisosCarga().mensajes);
 
   protected readonly titulo = computed(() => {
     if (this.cargando()) return 'Leyendo archivos…';
@@ -119,9 +120,15 @@ export class Dropzone {
     const lista = Array.from(archivos);
     const errs: string[] = [];
     const validos = lista.filter((f) => {
-      const ok = EXTENSIONES.test(f.name);
-      if (!ok) errs.push(`${f.name}: solo se admiten archivos .xls o .xlsx`);
-      return ok;
+      if (!EXTENSIONES.test(f.name)) {
+        errs.push(`${f.name}: solo se admiten archivos .xls o .xlsx`);
+        return false;
+      }
+      if (f.size > TAMANO_MAXIMO_MB * 1024 * 1024) {
+        errs.push(`${f.name}: supera el máximo de ${TAMANO_MAXIMO_MB} MB`);
+        return false;
+      }
+      return true;
     });
 
     this.cargando.set(true);
@@ -174,9 +181,7 @@ export class Dropzone {
         msgs.unshift(archivos === 1 ? 'Se cargó 1 archivo.' : `Se cargaron ${archivos} archivos.`);
       }
     } finally {
-      this.mensajes.set(msgs);
-      this.advertencias.set(advs);
-      this.errores.set(errs);
+      this.estado.avisosCarga.set({ mensajes: msgs, advertencias: advs, errores: errs });
       this.cargando.set(false);
     }
   }

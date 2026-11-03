@@ -43,7 +43,7 @@ import { BotonImprimir } from './boton-imprimir';
 
     @if (estado.reportesProfesionales().length === 0) {
       <p class="no-print rounded-lg bg-slate-100 p-4 text-sm text-slate-600">
-        Primero cargá los archivos de HSI desde la barra lateral.
+        Primero cargá los archivos de HSI desde Ver General.
       </p>
     } @else if (n === 0) {
       <p class="no-print rounded-lg bg-slate-100 p-4 text-sm text-slate-600">

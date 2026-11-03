@@ -36,16 +36,14 @@ if "%FALTA%"=="1" (
   call npm install
   if errorlevel 1 (
     echo.
-    echo La instalacion fallo. Probando con la version de xlsx publicada en npm...
-    call npm install xlsx@0.18.5
-    if errorlevel 1 (
-      echo.
-      echo No se pudo instalar. Copia todo el texto de esta ventana y pasalo para revisarlo.
-      goto :fin
-    )
+    echo No se pudo instalar. Copia todo el texto de esta ventana y pasalo para revisarlo.
+    goto :fin
   )
 )
 
+echo.
+echo ATENCION: este modo es para desarrollo. Usa SOLO los archivos de ejemplo.
+echo Para datos reales usa Estadisticas-medicas.exe.
 echo.
 echo Iniciando. Cuando termine de compilar se abre http://localhost:4200
 echo Para cerrar la app, cerra esta ventana.

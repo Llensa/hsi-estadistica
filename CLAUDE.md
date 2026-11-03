@@ -29,6 +29,7 @@ y los Anexos II de recupero financiero. Es una app de escritorio (Electron) sin 
   - `calculos.ts`: fechas, edad, rangos etarios, N/R, matriz de 31 días, consolidado
   - `anexo.ts`: pacientes con obra social para el Anexo II
   - `avisos.ts`: avisos de calidad de datos
+  - `busqueda.ts`: filtro de profesionales de la barra lateral
   - `estado.ts`: estado global con signals
   - `confirmacion.ts` y `quitar.ts`: confirmación antes de borrar
 - `src/app/components/`: un componente por archivo, plantilla inline, `OnPush`

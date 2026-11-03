@@ -51,6 +51,8 @@ archivo, usá `npm run app`.
 
 ## Desarrollo: abrir en el navegador
 
+Este modo no tiene las protecciones del `.exe`. Usalo solo con los archivos de `ejemplos`.
+
 1. Instalá **Node.js LTS** desde https://nodejs.org (versión 22 o 24) y reiniciá la PC.
 2. Descomprimí el zip en una carpeta **nueva y vacía**, por ejemplo `C:\proyectos\volcado-hsi`.
    - No la pongas dentro de otra carpeta que tenga `package.json` o `node_modules`.
@@ -107,7 +109,7 @@ En el diálogo de impresión desactivá "Encabezados y pies de página".
 
 | Problema | Qué hacer |
 | --- | --- |
-| `npm install` falla con `xlsx` o `cdn.sheetjs.com` | La red bloquea ese sitio. `iniciar.bat` reintenta solo con la versión de npm. A mano: `npm install xlsx@0.18.5`. |
+| `npm install` falla con `xlsx` o `cdn.sheetjs.com` | La red bloquea ese sitio. Probá desde otra red. No instales `xlsx@0.18.5`: tiene fallas de seguridad conocidas. |
 | `ERESOLVE` | Estás en una carpeta vieja. Usá una carpeta nueva y vacía. |
 | La página se ve sin estilos | Verificá que exista `postcss.config.json` y que **no** exista `tailwind.config.js`. Cerrá y volvé a abrir `iniciar.bat`. |
 | Pantalla en blanco | En `npm start`: F12 > Console, copiá el error en rojo. En el `.exe` las herramientas de desarrollo están desactivadas. |
@@ -121,6 +123,7 @@ En el diálogo de impresión desactivá "Encabezados y pies de página".
   - `calculos.ts`: fechas, edad, rangos, N/R, matriz de 31 días y consolidado
   - `anexo.ts`: pacientes con obra social
   - `avisos.ts`: avisos de calidad de datos
+  - `busqueda.ts`: filtro de profesionales
   - `estado.ts`: estado global (signals)
   - `confirmacion.ts`, `quitar.ts`: confirmación antes de quitar
 - `src/app/components/`: sidebar, dropzone, planilla, avisos, lista, módulo y hoja del Anexo II
