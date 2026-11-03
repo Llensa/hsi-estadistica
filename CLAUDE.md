@@ -2,13 +2,15 @@
 
 App web que lee los Excel exportados de HSI (uno por profesional) y arma:
 la planilla diaria de consultas por profesional, el consolidado del centro de salud
-y los Anexos II de recupero financiero. Todo corre en el navegador; no hay backend.
+y los Anexos II de recupero financiero. Es una app de escritorio (Electron) sin backend.
 
 ## Comandos
 
 - `npm install`: instalar dependencias
 - `npm start`: servidor de desarrollo en http://localhost:4200
 - `npm run build`: compilación de producción (usala para verificar que no hay errores)
+- `npm run app`: compila y abre la app de escritorio
+- `npm run dist`: genera `release/Estadisticas-medicas.exe` (portable)
 - Archivos de prueba con datos inventados: `ejemplos/`
 
 ## Stack
@@ -54,3 +56,6 @@ y los Anexos II de recupero financiero. Todo corre en el navegador; no hay backe
 Los Excel reales de HSI tienen nombres, DNI y diagnósticos de pacientes.
 Nunca leer, copiar ni pedir archivos reales: usar solo `ejemplos/` o archivos
 con datos inventados.
+
+`electron/main.cjs` bloquea toda conexión externa y usa una sesión solo en memoria.
+No quitar esas protecciones ni agregar persistencia de datos sin confirmar con el usuario.

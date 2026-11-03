@@ -1,12 +1,55 @@
 # Estadísticas médicas (HSI)
 
-App web para armar la planilla diaria de consultas por profesional, el consolidado del
-centro de salud y los Anexos II de recupero financiero, a partir de los Excel exportados de HSI.
-Todo se procesa en el navegador de la PC: no se sube ningún dato.
+Aplicación de escritorio para armar la planilla diaria de consultas por profesional, el
+consolidado del centro de salud y los Anexos II de recupero financiero, a partir de los Excel
+exportados de HSI. Todo se procesa en la PC: la app no se conecta a internet ni guarda los
+datos cargados.
 
-Hecha con Angular 20, Tailwind CSS 4 y SheetJS.
+Hecha con Angular 20, Tailwind CSS 4, SheetJS y Electron.
 
-## Instalar y abrir (Windows)
+## Aviso de responsabilidad
+
+**Leé este aviso antes de usar el programa. Al usarlo, lo aceptás.**
+
+Este programa se entrega "tal como está", sin garantías de ningún tipo, ni siquiera de que
+sus cálculos sean exactos. Quien lo usa debe controlar los resultados antes de presentarlos.
+
+Los archivos que se cargan pueden contener datos personales y de salud, que la Ley 25.326
+de Protección de Datos Personales de Argentina considera sensibles. **La persona o institución
+que usa el programa es la única responsable** de:
+
+- tener autorización para acceder a esos datos y tratarlos;
+- guardar, imprimir, compartir y eliminar de forma segura los archivos y las planillas;
+- cualquier filtración, pérdida, acceso indebido o mal uso de los datos;
+- cumplir la normativa aplicable y las reglas de su institución.
+
+**El creador del programa no accede a los datos, no los recibe ni los administra**, y no se
+hace responsable por las filtraciones, los daños o los usos indebidos que surjan del uso del
+programa, en la máxima medida que permita la ley.
+
+## Usar la app (Windows)
+
+1. Conseguí el archivo **`Estadisticas-medicas.exe`**. No hace falta instalar nada.
+2. Abrilo con doble clic. Puede tardar unos segundos en arrancar.
+3. La primera vez, Windows puede mostrar "Windows protegió su PC" porque el programa no tiene
+   firma digital. Si lo recibiste de una fuente de confianza, tocá **Más información** y
+   **Ejecutar de todas formas**.
+
+Guardá los Excel de HSI en una carpeta personal protegida, nunca dentro de la carpeta del proyecto.
+
+## Generar el .exe
+
+Con Node.js instalado, dentro de la carpeta del proyecto:
+
+```powershell
+npm install
+npm run dist
+```
+
+El archivo queda en `release\Estadisticas-medicas.exe`. Para probar la app sin generar el
+archivo, usá `npm run app`.
+
+## Desarrollo: abrir en el navegador
 
 1. Instalá **Node.js LTS** desde https://nodejs.org (versión 22 o 24) y reiniciá la PC.
 2. Descomprimí el zip en una carpeta **nueva y vacía**, por ejemplo `C:\proyectos\volcado-hsi`.
@@ -67,13 +110,8 @@ En el diálogo de impresión desactivá "Encabezados y pies de página".
 | `npm install` falla con `xlsx` o `cdn.sheetjs.com` | La red bloquea ese sitio. `iniciar.bat` reintenta solo con la versión de npm. A mano: `npm install xlsx@0.18.5`. |
 | `ERESOLVE` | Estás en una carpeta vieja. Usá una carpeta nueva y vacía. |
 | La página se ve sin estilos | Verificá que exista `postcss.config.json` y que **no** exista `tailwind.config.js`. Cerrá y volvé a abrir `iniciar.bat`. |
-| Pantalla en blanco | F12 > Console, copiá el error en rojo. |
+| Pantalla en blanco | En `npm start`: F12 > Console, copiá el error en rojo. En el `.exe` las herramientas de desarrollo están desactivadas. |
 | "No se encontró la columna 'Fecha de atención'" | El Excel usa otro nombre. Agregalo en `src/app/core/columnas.ts`. |
-
-## Firebase (opcional, todavía no se usa)
-
-Ver los comentarios en `src/app/app.config.ts`. Antes de guardar datos de pacientes en la nube
-hace falta autenticación y reglas de seguridad.
 
 ## Estructura
 
@@ -86,6 +124,7 @@ hace falta autenticación y reglas de seguridad.
   - `estado.ts`: estado global (signals)
   - `confirmacion.ts`, `quitar.ts`: confirmación antes de quitar
 - `src/app/components/`: sidebar, dropzone, planilla, avisos, lista, módulo y hoja del Anexo II
+- `electron/main.cjs`: app de escritorio, bloqueo de internet y sesión solo en memoria
 - `src/styles.css`: Tailwind (`@import "tailwindcss"`) y estilos de impresión
 - `postcss.config.json`: conecta Tailwind 4 con Angular
 - `ejemplos/`: archivos de prueba con datos inventados

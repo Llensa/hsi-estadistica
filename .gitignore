@@ -1,7 +1,18 @@
 # See https://docs.github.com/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
 
+# Datos de pacientes: los archivos reales nunca entran al repo.
+# Solo se permiten los ejemplos inventados (ejemplos/ejemplo-*).
+*.xls
+*.xlsx
+*.xlsm
+*.csv
+*.pdf
+!/ejemplos/ejemplo-*.xls
+!/ejemplos/ejemplo-*.xlsx
+
 # Compiled output
 /dist
+/release
 /tmp
 /out-tsc
 /bazel-out
