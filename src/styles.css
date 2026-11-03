@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+/* Páginas con nombre: la planilla va horizontal y el Anexo II vertical */
+@page planilla {
+  size: A4 landscape;
+  margin: 8mm;
+}
+
+@page anexo {
+  size: A4 portrait;
+  margin: 12mm;
+}
+
+@media print {
+  html,
+  body {
+    background: #fff !important;
+    margin: 0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .app-root {
+    display: block !important;
+    min-height: 0 !important;
+    background: #fff !important;
+  }
+
+  /* Sidebar, botones, avisos y listados no se imprimen */
+  .no-print,
+  aside,
+  button {
+    display: none !important;
+  }
+
+  /* ---------- Planilla (horizontal) ---------- */
+  .print-area {
+    page: planilla;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .print-area h2 {
+    font-size: 12pt !important;
+    font-weight: 700 !important;
+    margin: 0 0 2mm !important;
+  }
+
+  .print-area p {
+    font-size: 9pt !important;
+    margin: 0 0 2mm !important;
+  }
+
+  .print-area,
+  .print-area * {
+    color: #000 !important;
+  }
+
+  .planilla-wrap {
+    width: 100% !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+  }
+
+  .planilla {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    border: 1.5px solid #000 !important;
+    font-size: 7pt !important;
+  }
+
+  .planilla th,
+  .planilla td {
+    position: static !important;
+    border: 1px solid #000 !important;
+    background: #fff !important;
+    height: 4.6mm !important;
+    padding: 0 2px !important;
+    line-height: 1.1 !important;
+    text-align: center !important;
+  }
+
+  .planilla thead th {
+    background: #e5e5e5 !important;
+    font-weight: 700 !important;
+  }
+
+  .planilla tfoot td {
+    border-top: 2px solid #000 !important;
+    font-weight: 700 !important;
+  }
+
+  .planilla thead {
+    display: table-header-group;
+  }
+
+  .planilla tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* ---------- Anexo II (vertical, una hoja por paciente) ---------- */
+  .print-anexos {
+    page: anexo;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .print-anexos,
+  .print-anexos * {
+    color: #000 !important;
+  }
+
+  .anexos-lista {
+    display: block !important;
+  }
+
+  .anexo-hoja {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    break-inside: avoid;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  .anexo-hoja:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+}

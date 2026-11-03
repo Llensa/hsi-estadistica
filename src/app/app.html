@@ -1,0 +1,84 @@
+<div class="app-root flex min-h-screen bg-slate-50">
+  <app-sidebar />
+
+  <main
+    class="min-w-0 flex-1 space-y-6 p-6"
+    [class.print-anexos]="esAnexo()"
+    [class.print-area]="!esAnexo()"
+  >
+    @if (esAnexo()) {
+      <app-modulo-anexo />
+    } @else if (estado.reportesProfesionales().length === 0) {
+      <header>
+        <h2 class="text-2xl font-semibold text-slate-900">Estadísticas médicas</h2>
+        <p class="mt-1 text-sm text-slate-600">
+          Cargá los reportes por profesional exportados de HSI para armar la planilla y el
+          consolidado. Los datos se procesan en esta computadora y no se envían a ningún lado.
+        </p>
+      </header>
+      <app-dropzone />
+    } @else if (estado.profesionalActual(); as actual) {
+      <header class="flex items-start justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-semibold text-slate-900">{{ actual.profesional }}</h2>
+          <p class="mt-1 text-sm text-slate-600">{{ detalleProfesional() }}</p>
+        </div>
+        <div class="no-print flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            (click)="quitar.quitar(actual)"
+            class="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:border-red-300 hover:bg-red-50 hover:text-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-600"
+          >
+            Quitar
+          </button>
+          <app-boton-imprimir />
+        </div>
+      </header>
+
+      @if (duplicadoActual().length > 0) {
+        <p class="no-print rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          {{ actual.profesional }} también está cargado desde {{ duplicadoActual().join(', ') }} con
+          el mismo mes. Si es el mismo período, sus atenciones se suman dos veces en el
+          consolidado: quitá uno de los dos.
+        </p>
+      }
+
+      <app-avisos-reporte [reporte]="actual" />
+      <app-planilla [matriz]="actual.matriz" />
+    } @else {
+      <header class="flex items-start justify-between gap-4">
+        <div>
+          <h2 class="text-2xl font-semibold text-slate-900">Consolidado general</h2>
+          <p class="mt-1 text-sm text-slate-600">{{ detalleGeneral() }}</p>
+        </div>
+        <app-boton-imprimir />
+      </header>
+
+      @if (estado.periodos().length > 1) {
+        <p class="no-print rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          Los archivos son de distintos meses. El consolidado suma por número de día, así que
+          mezcla los meses. Para una planilla mensual, cargá solo archivos del mismo mes.
+        </p>
+      }
+      @if (profesionalesDuplicados().length > 0) {
+        <p class="no-print rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          Cargado más de una vez con el mismo mes: {{ profesionalesDuplicados().join(', ') }}. Si
+          los archivos son del mismo período, esas atenciones se suman dos veces. Revisá la lista
+          de abajo y quitá los repetidos.
+        </p>
+      }
+      @if (archivosConAvisos() > 0) {
+        <p class="no-print rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+          {{ archivosConAvisos() }}
+          {{ archivosConAvisos() === 1 ? 'archivo tiene' : 'archivos tienen' }} avisos. Abrí cada
+          profesional para ver el detalle.
+        </p>
+      }
+
+      <app-planilla [matriz]="estado.reporteConsolidado()" />
+      <app-lista-profesionales />
+    }
+  </main>
+</div>
+
+<app-dialogo-confirmar />
