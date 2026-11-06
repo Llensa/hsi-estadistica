@@ -32,6 +32,7 @@ y los Anexos II de recupero financiero. Es una app de escritorio (Electron) sin 
   - `avisos.ts`: avisos de calidad de datos
   - `busqueda.ts`: filtro de profesionales de la barra lateral
   - `resumen.ts`: control de Anexos y totales por obra social
+  - `rmce.ts`: Resumen Mensual de Consultorio Externo (formulario 2.1, versión corta): "1 a 4" junta 1 y 2 a 4; TOTAL incluye género sin especificar
   - `exportar.ts`: Excel único con todo lo cargado (pacientes solo si el usuario lo elige)
   - `lector.ts`, `lector.worker.ts`: lectura de Excel en un Web Worker
   - `estado.ts`: estado global con signals

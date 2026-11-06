@@ -80,11 +80,16 @@ o abrí "Símbolo del sistema" (cmd) en lugar de PowerShell.
 
 - **Ver General**: planilla consolidada de todos los profesionales y lista de archivos cargados.
 - **Profesional**: planilla de cada uno y los avisos de calidad de datos de su archivo.
+- **Formato**: arriba de cada planilla se elige **Planilla diaria** (31 días), **Resumen mensual**
+  (formulario 2.1, Resumen Mensual de Consultorio Externo) o **Ambas**. El formato elegido es el que
+  se ve, se imprime y se exporta. En el resumen mensual, localidad, dependencia, región sanitaria y
+  hoja N° se completan a mano porque no vienen en HSI (no se guardan al cerrar).
 - **Buscar**: la barra lateral filtra por profesional o especialidad. Enter abre el primero.
 - **Imprimir**: hoja A4 horizontal, sin menú ni botones, con bordes negros.
 - **Imprimir todo el mes**: el consolidado y una hoja por profesional, de una sola vez.
 - **Exportar a Excel**: un solo archivo con resumen, consolidado, una hoja por profesional y
-  obras sociales. Se puede agregar una hoja con todas las atenciones: incluye nombres, DNI y
+  obras sociales, en el formato elegido. Debajo de cada hoja hay **Referencias** que explican cada
+  apartado. Se puede agregar una hoja con todas las atenciones: incluye nombres, DNI y
   diagnósticos, así que ese archivo queda bajo tu responsabilidad.
 - **Anexo II (Recupero)**: un comprobante por cada atención con obra social o prepaga,
   uno por hoja (A4 vertical). Se puede filtrar por profesional, obra social y mes. Muestra los
@@ -134,6 +139,7 @@ En el diálogo de impresión desactivá "Encabezados y pies de página".
   - `busqueda.ts`: filtro de profesionales
   - `resumen.ts`: control de Anexos y totales por obra social
   - `exportar.ts`: Excel con todo lo cargado
+  - `rmce.ts`: Resumen Mensual de Consultorio Externo (versión corta)
   - `lector.ts`, `lector.worker.ts`: lectura de Excel en segundo plano
   - `estado.ts`: estado global (signals)
   - `confirmacion.ts`, `quitar.ts`: confirmación antes de quitar

@@ -112,6 +112,17 @@
     page-break-inside: avoid;
   }
 
+  /* En "Ambas", el resumen mensual va en su propia hoja */
+  app-planilla + app-resumen-mensual {
+    break-before: page;
+  }
+
+  .rmce-tabla td,
+  .rmce-tabla th {
+    font-size: 8pt !important;
+    height: 6mm !important;
+  }
+
   /* ---------- Anexo II (vertical, una hoja por paciente) ---------- */
   .print-anexos {
     page: anexo;

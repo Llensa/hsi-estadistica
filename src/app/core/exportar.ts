@@ -2,13 +2,30 @@ import { extraerPacientesConObraSocial, formatearFechaCelda } from './anexo';
 import { calcularConsolidado, formatearPeriodo, leerFechas } from './calculos';
 import { esVacio, indexarFila, texto, valor } from './columnas';
 import { totalesPorObraSocial } from './resumen';
+import { ANCHOS_RMCE, MERGES_RMCE, calcularRmce, filasRmce, referenciasRmce, type DatosRmce } from './rmce';
 import { GENEROS, RANGOS, type DiaStats, type MatrizMensual, type ReporteProfesional } from './types';
 
 type XLSXModulo = typeof import('xlsx');
 type Celda = string | number;
 
 const ETIQUETA_GENERO = { M: 'M', F: 'F', 'Sin Especificar': 'Sin especificar' } as const;
-const HOJAS_FIJAS = ['Resumen', 'Consolidado', 'Obras sociales', 'Atenciones'];
+const HOJAS_FIJAS = ['Resumen', 'Consolidado', 'RMCE Consolidado', 'Obras sociales', 'Atenciones'];
+
+export type FormatoExcel = 'completa' | 'resumida' | 'ambas';
+
+/** Agrega debajo de lo que hay en la hoja una explicación de cada apartado */
+function agregarReferencias(XLSX: XLSXModulo, ws: import('xlsx').WorkSheet, lineas: string[]) {
+  XLSX.utils.sheet_add_aoa(ws, [[], ['Referencias'], ...lineas.map((l) => [l])], { origin: -1 });
+}
+
+const REFERENCIAS_PLANILLA = [
+  'Planilla diaria: una fila por cada día del mes (1 a 31). T = total del mes.',
+  'N: pacientes nuevos (primera atención del DNI en el archivo del profesional). R: atenciones repetidas del mismo paciente.',
+  'M = Varón cis, F = Mujer cis, Sin especificar = otro valor o vacío en "Género autopercibido".',
+  'Rangos de edad: años cumplidos el día de la atención. -1 = menor de 1 año; 65 y más = 65 años o más.',
+  'TOTAL M, TOTAL F y TOTAL SIN ESPECIFICAR: suma de los rangos de cada género. TOTAL CONSULTAS = N + R.',
+  'Solo cuentan las filas con fechas válidas; las descartadas se informan en la hoja Resumen.',
+];
 const MAX_NOMBRE_HOJA = 31;
 
 const totalGenero = (d: DiaStats, g: (typeof GENEROS)[number]) =>
@@ -51,6 +68,7 @@ export function nombresDeHojas(nombres: string[], reservados: string[] = HOJAS_F
 
 function hojaPlanilla(XLSX: XLSXModulo, titulo: string, matriz: MatrizMensual) {
   const ws = XLSX.utils.aoa_to_sheet([[titulo], ...filasPlanilla(matriz)]);
+  agregarReferencias(XLSX, ws, REFERENCIAS_PLANILLA);
   const primera = 3;
   ws['!merges'] = GENEROS.map((_, i) => ({
     s: { r: 1, c: primera + i * RANGOS.length },
@@ -86,6 +104,15 @@ function hojaResumen(XLSX: XLSXModulo, reportes: ReporteProfesional[], advertenc
   }
   const ws = XLSX.utils.aoa_to_sheet(filas);
   ws['!cols'] = [{ wch: 30 }, { wch: 24 }, { wch: 18 }];
+  agregarReferencias(XLSX, ws, [
+    'Resumen: datos generales y una fila por cada planilla cargada.',
+    'Atenciones: consultas contadas (filas con fecha de atención y de nacimiento válidas).',
+    'N: pacientes nuevos (primera atención del DNI en el archivo del profesional). R: atenciones repetidas.',
+    'M = Varón cis, F = Mujer cis, Sin especificar = otro valor o vacío en "Género autopercibido".',
+    'Filas descartadas: sin fecha válida, con nacimiento posterior a la atención o edad mayor a 120 años.',
+    'Advertencia: situaciones que pueden alterar los totales, como meses mezclados o profesionales repetidos.',
+    'El resto de las hojas: Consolidado y una hoja por profesional (planilla diaria), RMCE (resumen mensual), Obras sociales y, si se eligió, Atenciones.',
+  ]);
   return ws;
 }
 
@@ -96,6 +123,20 @@ function hojaObrasSociales(XLSX: XLSXModulo, reportes: ReporteProfesional[]) {
     ...totales.map((t) => [t.obraSocial, t.atenciones, t.profesionales]),
   ]);
   ws['!cols'] = [{ wch: 30 }];
+  agregarReferencias(XLSX, ws, [
+    'Atenciones: cantidad de Anexos II (atenciones con obra social o prepaga informada) de cada cobertura.',
+    'Profesionales: cuántos profesionales distintos atendieron pacientes de esa cobertura.',
+    'Los nombres se agrupan sin distinguir mayúsculas ni tildes.',
+  ]);
+  return ws;
+}
+
+function hojaRmce(XLSX: XLSXModulo, reportes: ReporteProfesional[], datos?: DatosRmce) {
+  const rmce = calcularRmce(reportes);
+  const ws = XLSX.utils.aoa_to_sheet(filasRmce(rmce, datos));
+  ws['!merges'] = MERGES_RMCE.map((r) => XLSX.utils.decode_range(r));
+  ws['!cols'] = ANCHOS_RMCE.map((wch) => ({ wch }));
+  agregarReferencias(XLSX, ws, referenciasRmce(rmce));
   return ws;
 }
 
@@ -131,33 +172,55 @@ export function filasAtenciones(reportes: ReporteProfesional[]): Celda[][] {
 export interface OpcionesExportar {
   incluirPacientes: boolean;
   advertencias?: string[];
+  /** Qué planillas van: diaria, resumen mensual o ambas */
+  formato?: FormatoExcel;
+  datosRmce?: DatosRmce;
 }
 
 /** Un solo libro con el resumen, el consolidado y una hoja por profesional */
 export function armarLibro(
   XLSX: XLSXModulo,
   reportes: ReporteProfesional[],
-  { incluirPacientes, advertencias = [] }: OpcionesExportar
+  { incluirPacientes, advertencias = [], formato = 'completa', datosRmce }: OpcionesExportar
 ): import('xlsx').WorkBook {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, hojaResumen(XLSX, reportes, advertencias), 'Resumen');
-  XLSX.utils.book_append_sheet(
-    wb,
-    hojaPlanilla(XLSX, 'Consolidado general', calcularConsolidado(reportes)),
-    'Consolidado'
-  );
+  const diaria = formato !== 'resumida';
+  const resumida = formato !== 'completa';
+  const nombres = nombresDeHojas([
+    ...(diaria ? reportes.map((r) => r.profesional) : []),
+    ...(resumida ? reportes.map((r) => `RMCE ${r.profesional}`) : []),
+  ]);
 
-  const nombres = nombresDeHojas(reportes.map((r) => r.profesional));
-  reportes.forEach((r, i) => {
-    const titulo = [r.profesional, r.especialidad, r.periodos.map(formatearPeriodo).join(', ')]
-      .filter(Boolean)
-      .join(' · ');
-    XLSX.utils.book_append_sheet(wb, hojaPlanilla(XLSX, titulo, r.matriz), nombres[i]);
-  });
+  if (diaria) {
+    XLSX.utils.book_append_sheet(
+      wb,
+      hojaPlanilla(XLSX, 'Consolidado general', calcularConsolidado(reportes)),
+      'Consolidado'
+    );
+    reportes.forEach((r, i) => {
+      const titulo = [r.profesional, r.especialidad, r.periodos.map(formatearPeriodo).join(', ')]
+        .filter(Boolean)
+        .join(' · ');
+      XLSX.utils.book_append_sheet(wb, hojaPlanilla(XLSX, titulo, r.matriz), nombres[i]);
+    });
+  }
+
+  if (resumida) {
+    const desde = diaria ? reportes.length : 0;
+    XLSX.utils.book_append_sheet(wb, hojaRmce(XLSX, reportes, datosRmce), 'RMCE Consolidado');
+    reportes.forEach((r, i) =>
+      XLSX.utils.book_append_sheet(wb, hojaRmce(XLSX, [r], datosRmce), nombres[desde + i])
+    );
+  }
 
   XLSX.utils.book_append_sheet(wb, hojaObrasSociales(XLSX, reportes), 'Obras sociales');
   if (incluirPacientes) {
     const ws = XLSX.utils.aoa_to_sheet(filasAtenciones(reportes));
+    agregarReferencias(XLSX, ws, [
+      'Atenciones: una fila por cada fila de los archivos de HSI. Contiene datos personales y de salud.',
+      'Contada en la planilla: Sí = entra en las estadísticas; No = fila descartada (ver motivos en la app).',
+    ]);
     XLSX.utils.book_append_sheet(wb, ws, 'Atenciones');
   }
   return wb;

@@ -44,7 +44,13 @@
       }
 
       <app-avisos-reporte [reporte]="actual" />
-      <app-planilla [matriz]="actual.matriz" />
+      <app-selector-formato />
+      @if (estado.formato() !== 'resumida') {
+        <app-planilla [matriz]="actual.matriz" />
+      }
+      @if (estado.formato() !== 'completa') {
+        <app-resumen-mensual [reportes]="[actual]" />
+      }
     } @else {
       <header class="flex items-start justify-between gap-4">
         <div>
@@ -78,7 +84,13 @@
         </p>
       }
 
-      <app-planilla [matriz]="estado.reporteConsolidado()" />
+      <app-selector-formato />
+      @if (estado.formato() !== 'resumida') {
+        <app-planilla [matriz]="estado.reporteConsolidado()" />
+      }
+      @if (estado.formato() !== 'completa') {
+        <app-resumen-mensual [reportes]="estado.reportesProfesionales()" />
+      }
       <app-lista-profesionales />
       <app-impresion-mes />
     }

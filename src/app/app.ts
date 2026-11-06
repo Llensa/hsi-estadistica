@@ -9,6 +9,8 @@ import { ImpresionMes } from './components/impresion-mes';
 import { ListaProfesionales } from './components/lista-profesionales';
 import { ModuloAnexo } from './components/modulo-anexo';
 import { Planilla } from './components/planilla';
+import { ResumenMensual } from './components/resumen-mensual';
+import { SelectorFormato } from './components/selector-formato';
 import { Sidebar } from './components/sidebar';
 import { avisosDeReporte } from './core/avisos';
 import { formatearPeriodo } from './core/calculos';
@@ -28,6 +30,8 @@ import { QuitarReportes } from './core/quitar';
     ListaProfesionales,
     ModuloAnexo,
     Planilla,
+    ResumenMensual,
+    SelectorFormato,
     Sidebar,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,

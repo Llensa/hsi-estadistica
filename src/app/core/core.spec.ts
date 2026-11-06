@@ -14,6 +14,7 @@ import {
 import { Estado } from './estado';
 import { armarLibro, filasAtenciones, filasPlanilla, nombreArchivoExcel, nombresDeHojas } from './exportar';
 import { faltantesAnexo, mesDeAnexo, totalesPorObraSocial } from './resumen';
+import { apellidoDoc, calcularRmce, filasRmce, referenciasRmce } from './rmce';
 import type { Fila, PacienteAnexo, ReporteProfesional } from './types';
 
 const fila = (dni: unknown, atencion: unknown, extra: Fila = {}): Fila => ({
@@ -253,5 +254,74 @@ describe('Estado', () => {
     estado.setVista({ tipo: 'profesional', id: 'P' });
     estado.quitarReporte('P');
     expect(estado.vista().tipo).toBe('general');
+  });
+});
+
+describe('resumen mensual (RMCE)', () => {
+  const nac = (edad: number) => `10/01/${2026 - edad}`;
+  const at = (dni: number, edad: number, genero: string, os: string, esp = 'Tocoginecología') =>
+    fila(dni, '05/03/2026', {
+      'Fecha de nacimiento': nac(edad),
+      'Género autopercibido': genero,
+      'Obra social/Prepaga': os,
+      Especialidad: esp,
+    });
+  const r = reporte('Guidolin, Ana', [
+    at(1, 30, 'Mujer cis', 'OSEP'),
+    at(1, 30, 'Mujer cis', 'OSEP'),
+    at(2, 1, 'Varón cis', ''),
+    at(3, 3, 'Varón cis', 'Sin obra social'),
+    at(4, 70, 'Mujer trans', 'IOSFA', 'Clínica Médica'),
+    fila(5, 'sin fecha'),
+  ]);
+  const rmce = calcularRmce([r]);
+
+  it('usa el apellido del profesional en DOC.', () => {
+    expect(apellidoDoc('Guidolin, Ana')).toBe('GUIDOLIN');
+    expect(rmce.doc).toBe('GUIDOLIN');
+    expect(calcularRmce([r, r]).doc).toBe('TODOS');
+  });
+  it('arma una fila por servicio y junta 1 año con 2 a 4 en "1 a 4"', () => {
+    expect(rmce.servicios.map((s) => s.servicio)).toEqual(['CLÍNICA MÉDICA', 'TOCOGINECOLOGÍA']);
+    const toco = rmce.servicios[1];
+    expect(toco.V[1]).toBe(2);
+    expect(toco.M[5]).toBe(2);
+  });
+  it('TOTAL incluye género sin especificar y no cuenta las filas descartadas', () => {
+    expect(rmce.totales.total).toBe(5);
+    expect(rmce.sinEspecificar).toBe(1);
+    expect(rmce.nuevos + rmce.repetidos).toBe(5);
+    expect(rmce.varones).toBe(2);
+    expect(rmce.mujeres).toBe(2);
+  });
+  it('obra social SI y NO', () => {
+    expect([rmce.totales.osSi, rmce.totales.osNo]).toEqual([3, 2]);
+  });
+  it('respeta la grilla del formulario: 20 columnas, encabezados en su lugar', () => {
+    const filas = filasRmce(rmce, { localidad: 'SAN MARTÍN', dependencia: '', region: 'V', hoja: '' });
+    expect(filas.every((f) => f.length === 20)).toBeTrue();
+    expect(filas[0][3]).toBe('Resumen Mensual de Consultorio Externo');
+    expect(filas[0].slice(18)).toEqual([`N ${rmce.nuevos}`, `R ${rmce.repetidos}`]);
+    expect(filas[2].slice(0, 2)).toEqual(['CS Prueba', 'DOC.: GUIDOLIN']);
+    expect(filas[2][13]).toBe('3. MES 3');
+    expect(filas[2][17]).toBe('4. AÑO 2026');
+    expect(filas[3][0]).toBe('SAN MARTÍN');
+    expect(filas[3][17]).toBe('7. REGIÓN SANITARIA V');
+    expect(filas[filas.length - 1][0]).toBe('13. TOTALES');
+    expect(filas[filas.length - 1][17]).toBe(5);
+  });
+  it('avisa en las referencias las atenciones sin género', () => {
+    expect(referenciasRmce(rmce).at(-1)).toContain('1 atención tiene género sin especificar');
+  });
+  it('el Excel trae las hojas del formato elegido con referencias abajo', () => {
+    const solo = armarLibro(XLSX, [r], { incluirPacientes: false, formato: 'resumida' });
+    expect(solo.SheetNames).toEqual(['Resumen', 'RMCE Consolidado', 'RMCE Guidolin, Ana', 'Obras sociales']);
+    const ambas = armarLibro(XLSX, [r], { incluirPacientes: false, formato: 'ambas' });
+    expect(ambas.SheetNames).toEqual([
+      'Resumen', 'Consolidado', 'Guidolin, Ana', 'RMCE Consolidado', 'RMCE Guidolin, Ana', 'Obras sociales',
+    ]);
+    for (const n of ambas.SheetNames) {
+      expect(XLSX.utils.sheet_to_csv(ambas.Sheets[n])).withContext(n).toContain('Referencias');
+    }
   });
 });

@@ -2,6 +2,7 @@ import { Injectable, computed, signal } from '@angular/core';
 import { extraerPacientesConObraSocial } from './anexo';
 import { calcularConsolidado } from './calculos';
 import { SIN_PROFESIONAL } from './parse-reporte';
+import { DATOS_RMCE_VACIOS, type DatosRmce } from './rmce';
 import type { ReporteProfesional, Vista } from './types';
 
 export interface ResultadoAgregar {
@@ -10,6 +11,9 @@ export interface ResultadoAgregar {
   /** Planillas que ya estaban cargadas y no se agregaron */
   repetidos: ReporteProfesional[];
 }
+
+/** completa = planilla diaria; resumida = Resumen Mensual de Consultorio Externo */
+export type Formato = 'completa' | 'resumida' | 'ambas';
 
 export interface AvisosCarga {
   mensajes: string[];
@@ -34,6 +38,12 @@ export class Estado {
 
   /** Resultado de la última carga. Vive acá porque la dropzone cambia al cargar el primer archivo. */
   readonly avisosCarga = signal<AvisosCarga>(SIN_AVISOS);
+
+  /** Qué se ve, se imprime y se exporta */
+  readonly formato = signal<Formato>('completa');
+
+  /** Campos del resumen mensual que no vienen en HSI. Solo en memoria. */
+  readonly datosRmce = signal<DatosRmce>(DATOS_RMCE_VACIOS);
 
   /** Matriz de 31 días con la suma de todos los profesionales */
   readonly reporteConsolidado = computed(() => calcularConsolidado(this.reportesProfesionales()));
